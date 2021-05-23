@@ -1,12 +1,14 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
+import json
 
 # Create firefox browser for selenium
 opts = webdriver.FirefoxOptions()
 # Turn headless browser on (True) or off (False)
-opts.headless = False
+opts.headless = True
 driver = webdriver.Firefox(options=opts)
+# Set timeout to 30s
 driver.set_page_load_timeout(30)
 
 # Set start_url to scrape
@@ -17,13 +19,14 @@ all_locations = []
 
 # Loop through all location pages (10 locations per page)
 for start_number in range(0, 130, 10):
-    # Open and parse url
+    # Open url
     driver.get(url + str(start_number))
-    # Wait 5 seconds between requests
-    time.sleep(5)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-    print(url + str(start_number))
+    # Wait 5 seconds between requests
+    time.sleep(1)
+
+    # Parse url
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
 
     # Find each search result
     results = soup.find_all(class_='location-card')
@@ -37,17 +40,17 @@ for start_number in range(0, 130, 10):
         zip = result.find(class_='field-zip').text
         state = result.find(class_='field-state-abbreviation').text
 
-        print(name)
-
         # Save location data in location_dict
         location_dict = {'name': name, 'street': street, 'city': city, 'zip': zip, 'state': state}
         # Append location_dict to all_locations
         all_locations.append(location_dict)
 
     # Wait 5 seconds between requests
-    time.sleep(5)
+    time.sleep(1)
 
-print(all_locations)
+# Write all locations to json file
+with open('ufpi_locations.json', 'w') as file:
+    json.dump(all_locations, file, indent=4)
 
 # Close webdriver
 driver.quit()
